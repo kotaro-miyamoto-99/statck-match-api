@@ -1,7 +1,17 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 BASE_URL = "http://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
 API_KEY = "8a6819bc6cccd830"
@@ -25,3 +35,10 @@ async def root():
 async def gourmet_search(large_area: str = "Z011"):
     data = get_gourmet_data(large_area)
     return data
+
+
+
+
+
+
+
