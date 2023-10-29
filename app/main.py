@@ -1,7 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import requests
+import os
+from dotenv import load_dotenv
 
+# .env ファイルから環境変数を読み込む
+load_dotenv()
 
 app = FastAPI()
 
@@ -13,8 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BASE_URL = "http://webservice.recruit.co.jp/hotpepper/gourmet/v1/"
-API_KEY = "8a6819bc6cccd830"
+HOT_PEPPER_BASE_URL = os.getenv("HOT_PEPPER_BASE_URL")
+print(f"HOT_PEPPER_BASE_URL:{HOT_PEPPER_BASE_URL}")
+API_KEY = os.getenv("API_KEY")  # .env から API_KEY を取得
 
 def get_gourmet_data(large_area: str):
     params = {
@@ -22,7 +27,9 @@ def get_gourmet_data(large_area: str):
         "large_area": large_area,
         "format": "json"
     }
-    response = requests.get(BASE_URL, params=params)
+    
+    response = requests.get(HOT_PEPPER_BASE_URL, params=params)
+    print(f"response: {response}")
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="API request failed")
     return response.json()
@@ -35,10 +42,3 @@ async def root():
 async def gourmet_search(large_area: str = "Z011"):
     data = get_gourmet_data(large_area)
     return data
-
-
-
-
-
-
-
