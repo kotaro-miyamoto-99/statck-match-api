@@ -4,8 +4,8 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# .env ファイルから環境変数を読み込む
-load_dotenv()
+if os.getenv("ENV") != "local":
+    load_dotenv()
 
 app = FastAPI()
 
@@ -18,7 +18,6 @@ app.add_middleware(
 )
 
 HOT_PEPPER_BASE_URL = os.getenv("HOT_PEPPER_BASE_URL")
-print(f"HOT_PEPPER_BASE_URL:{HOT_PEPPER_BASE_URL}")
 API_KEY = os.getenv("API_KEY")  # .env から API_KEY を取得
 
 def get_gourmet_data(large_area: str):
@@ -29,7 +28,7 @@ def get_gourmet_data(large_area: str):
     }
     
     response = requests.get(HOT_PEPPER_BASE_URL, params=params)
-    print(f"response: {response}")
+
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="API request failed")
     return response.json()
