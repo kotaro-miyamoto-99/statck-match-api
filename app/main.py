@@ -1,43 +1,26 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import requests
-import os
-from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy.orm import Session
 
-if os.getenv("ENV") != "local":
-    load_dotenv()
+from . import crud, models, schemas
+from .database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-HOT_PEPPER_BASE_URL = os.getenv("HOT_PEPPER_BASE_URL")
-API_KEY = os.getenv("API_KEY")  # .env から API_KEY を取得
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-def get_gourmet_data(large_area: str):
-    params = {
-        "key": API_KEY,
-        "large_area": large_area,
-        "format": "json"
-    }
-    
-    response = requests.get(HOT_PEPPER_BASE_URL, params=params)
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="API request failed")
-    return response.json()
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World From Fast API"}
-
-@app.get("/gourmet/")
-async def gourmet_search(large_area: str = "Z011"):
-    data = get_gourmet_data(large_area)
-    return data
+@app.get("/companies/", response_model=list[schemas.Company])
+def read_companies(
+    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+):
+    companies = crud.get_companies(db, skip=skip, limit=limit)
+    return companies
